@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">     
+</head>
+
+<body>
+    <div id="app" class="container mt-5 col=12">
+        <form @submit.prevent="add">
+        <div class="form-group">
+            <div>Nama Barang :<input type="text" v-model="name" class="form-control"></div>
+            <div class="alert alert-danger" v-if="this.errors.name">{{errors.name}}</div>
+        </div>
+        <div class="form-group">
+           <div>Harga Barang :<input type="number" min="0" v-model="price" class="form-control" ></div>
+           <div class="alert alert-danger" v-if="this.errors.price">{{errors.price}}</div>
+        </div>
+        <div><button type="submit" class="btn btn-primary">Add</button></div>
+        </form>
+
+        <div class="spinner-border text-primary" role="status" v-if="loading">
+                <span class="sr-only">Loading...</span>
+              </div>
+        <table  class="table" v-if="!loading">
+            <tr>
+                <td>#</td>
+                <td>Nama</td>
+                <td>Harga</td>
+            </tr>
+            <tr v-for="(item, index) in items" :key="item.id">
+                <!-- curly bracket adalah keharusan dalam vue apabila ingin mengambil data dibawah nya -->
+            <td>{{ ++index }}</td> 
+            <td>{{item.name}}</td>
+            <td>(Rp{{item.price}})</td>
+                <td>
+                    <button 
+                    @click="remove(item)"
+                    class="btn btn-danger">
+                    &times;</button>
+                </td>
+                <tr>
+                        <td></td>
+                        <td></td>
+                        <td>Rp{{total}}</td>
+                    </tr>
+        </tr>
+    </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+
+                async mounted(){
+                    this.loading = true
+                    const response = await axios.get('http://cfc40bbc.ngrok.io/api/items')
+                    this.items = response.data
+                    this.loading = false
+                },
+            
+            data() {
+                return {
+                    loading: false,
+                    name: '',
+                    price: '',
+                    errors: {},
+                    items: []
+                }
+            },
+            
+            computed: {
+                total(){
+                    return this.items
+                    .map(item => Number(item.price))
+                    .reduce((prev,current) => prev + current, 0 )
+                }
+            },
+
+
+
+            // kegunaan method disini untuk ngepush data
+            methods: {
+            
+
+                add() {
+                    this.errors = {}
+                if (this.name.trim() === ''){
+                    this.errors.name = 'Nama Harus Di Isi'
+                }
+                if (this.price.trim() === ''){
+                    this.errors.price = 'Harga harus diatas 1'
+                }
+
+                if (Object.values(this.errors).length > 0){
+                    return
+                }
+
+                    this.items.push({
+                        id: Date.now(),
+                        name: this.name,
+                        price: this.price,
+                    })
+// yang dibawah sini untuk ngosongin field inputan sehabis di enter
+                    this.name = ''
+                    this.price = ''
+                },
+
+                     remove(item){
+                         const index = this.items.indexOf(item)
+                        this.items.splice(index, 1)
+                     },
+
+                 
+            }
+            
+
+        })
+    </script>
+</body>
+
+</html>
